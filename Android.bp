@@ -1,5 +1,4 @@
 cc_binary_host {
-    clang: true,
     srcs: [
         "libkmod/libkmod.c",
         "libkmod/libkmod-file.c",
