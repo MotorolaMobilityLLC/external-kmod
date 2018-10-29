@@ -41,7 +41,7 @@ SED_PROCESS = \
 	$(SED_PROCESS)
 
 LIBKMOD_CURRENT=5
-LIBKMOD_REVISION=2
+LIBKMOD_REVISION=3
 LIBKMOD_AGE=3
 
 noinst_LTLIBRARIES = shared/libshared.la
@@ -498,3 +498,13 @@ tar: kmod-$(VERSION).tar.xz kmod-$(VERSION).tar.sign
 
 tar-sync: kmod-$(VERSION).tar.xz kmod-$(VERSION).tar.sign
 	kup put kmod-$(VERSION).tar.xz  kmod-$(VERSION).tar.sign /pub/linux/utils/kernel/kmod/
+
+# ------------------------------------------------------------------------------
+# mkosi
+# ------------------------------------------------------------------------------
+
+DISTRO ?= "arch"
+
+mkosi:
+	-$(MKDIR_P) $(top_srcdir)/testsuite/mkosi/mkosi.cache
+	$(MKOSI) -C $(top_srcdir)/testsuite/mkosi --build-sources ../../ --default mkosi.${DISTRO} -fi
