@@ -5,10 +5,10 @@ third_party {
     type: GIT
     value: "https://git.kernel.org/pub/scm/utils/kernel/kmod/kmod.git"
   }
-  version: "v25"
+  version: "v26"
   last_upgrade_date {
-    year: 2018
-    month: 10
-    day: 29
+    year: 2019
+    month: 2
+    day: 7
   }
 }
