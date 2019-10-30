@@ -22,7 +22,7 @@
 
 /* Define to 1 if you have the declaration of `strndupa', and to 0 if you
    don't. */
-#define HAVE_DECL_STRNDUPA 1
+/* #define HAVE_DECL_STRNDUPA */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -180,4 +180,13 @@ char* basename(const char*);
 #else
 #include <endian.h>
 
+#endif
+
+#if defined(__ANDROID__)
+#include <stdlib.h>
+#include <unistd.h>
+static inline char *get_current_dir_name(void)
+{
+    return getcwd(malloc(PATH_MAX), PATH_MAX);
+}
 #endif
