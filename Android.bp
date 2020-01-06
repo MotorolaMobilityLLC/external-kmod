@@ -14,6 +14,7 @@ cc_defaults {
         "-DHAVE_CONFIG_H",
         "-DANOTHER_BRICK_IN_THE",
         "-DSYSCONFDIR=\"/tmp\"",
+        "-UNDEBUG",
     ],
     target: {
         linux_glibc: {
