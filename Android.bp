@@ -30,6 +30,7 @@ cc_library_static {
     name: "libkmod",
     srcs: [
         "libkmod/libkmod.c",
+        "libkmod/libkmod-builtin.c",
         "libkmod/libkmod-file.c",
         "libkmod/libkmod-module.c",
         "libkmod/libkmod-config.c",

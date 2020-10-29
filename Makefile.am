@@ -35,15 +35,15 @@ SED_PROCESS = \
 	-e 's,@liblzma_LIBS\@,${liblzma_LIBS},g' \
 	-e 's,@zlib_CFLAGS\@,${zlib_CFLAGS},g' \
 	-e 's,@zlib_LIBS\@,${zlib_LIBS},g' \
-	-e 's,@openssl_CFLAGS\@,${openssl_CFLAGS},g' \
-	-e 's,@openssl_LIBS\@,${openssl_LIBS},g' \
+	-e 's,@libcrypto_CFLAGS\@,${libcrypto_CFLAGS},g' \
+	-e 's,@libcrypto_LIBS\@,${libcrypto_LIBS},g' \
 	< $< > $@ || rm $@
 
 %.pc: %.pc.in Makefile
 	$(SED_PROCESS)
 
 LIBKMOD_CURRENT=5
-LIBKMOD_REVISION=4
+LIBKMOD_REVISION=5
 LIBKMOD_AGE=3
 
 noinst_LTLIBRARIES = shared/libshared.la
@@ -68,6 +68,7 @@ libkmod_libkmod_la_SOURCES = \
 	libkmod/libkmod.h \
 	libkmod/libkmod-internal.h \
 	libkmod/libkmod.c \
+	libkmod/libkmod-builtin.c \
 	libkmod/libkmod-list.c \
 	libkmod/libkmod-config.c \
 	libkmod/libkmod-index.c \
@@ -89,7 +90,7 @@ libkmod_libkmod_la_DEPENDENCIES = \
 	${top_srcdir}/libkmod/libkmod.sym
 libkmod_libkmod_la_LIBADD = \
 	shared/libshared.la \
-	${liblzma_LIBS} ${zlib_LIBS} ${openssl_LIBS}
+	${liblzma_LIBS} ${zlib_LIBS} ${libcrypto_LIBS}
 
 noinst_LTLIBRARIES += libkmod/libkmod-internal.la
 libkmod_libkmod_internal_la_SOURCES = $(libkmod_libkmod_la_SOURCES)
@@ -173,7 +174,10 @@ CPYTHON_MODULE_CFLAGS = \
 	$(AM_CFLAGS) -DCPYTHON_COMPILING_IN_PYPY=0 \
 	$(PYTHON_NOWARN) $(PYTHON_CFLAGS) \
 	-fvisibility=default
-CPYTHON_MODULE_LDFLAGS = $(AM_LDFLAGS) -module -avoid-version -shared
+# Filter -Wl,--no-undefined to fix build with python 3.8
+comma = ,
+CPYTHON_MODULE_LDFLAGS = $(subst -Wl$(comma)--no-undefined,,$(AM_LDFLAGS))
+CPYTHON_MODULE_LDFLAGS += -module -avoid-version -shared
 
 if BUILD_PYTHON
 pkgpyexec_LTLIBRARIES = \
@@ -414,8 +418,6 @@ distclean-local: $(DISTCLEAN_LOCAL_HOOKS)
 
 buildtest-TESTS:
 	$(MAKE) $(AM_MAKEFLAGS) $(check_LTLIBRARIES) $(check_PROGRAMS)
-
-DISTCLEANFILES += $(DOLT_CLEANFILES)
 
 # ------------------------------------------------------------------------------
 # coverage
