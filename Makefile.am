@@ -31,6 +31,8 @@ SED_PROCESS = \
 	-e 's,@exec_prefix\@,$(exec_prefix),g' \
 	-e 's,@libdir\@,$(libdir),g' \
 	-e 's,@includedir\@,$(includedir),g' \
+	-e 's,@libzstd_CFLAGS\@,${libzstd_CFLAGS},g' \
+	-e 's,@libzstd_LIBS\@,${libzstd_LIBS},g' \
 	-e 's,@liblzma_CFLAGS\@,${liblzma_CFLAGS},g' \
 	-e 's,@liblzma_LIBS\@,${liblzma_LIBS},g' \
 	-e 's,@zlib_CFLAGS\@,${zlib_CFLAGS},g' \
@@ -42,8 +44,21 @@ SED_PROCESS = \
 %.pc: %.pc.in Makefile
 	$(SED_PROCESS)
 
+# Rules for libtool versioning (from https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html)
+# 1. Start with version information of ‘0:0:0’ for each libtool library.
+# 2. Update the version information only immediately before a public release of
+#    your software. More frequent updates are unnecessary, and only guarantee that
+#    the current interface number gets larger faster.
+# 3. If the library source code has changed at all since the last update, then
+#    increment revision (‘c:r:a’ becomes ‘c:r+1:a’).
+# 4. If any interfaces have been added, removed, or changed since the last
+#    update, increment current, and set revision to 0.
+# 5. If any interfaces have been added since the last public release, then
+#    increment age.
+# 6. If any interfaces have been removed or changed since the last public
+#    release, then set age to 0.
 LIBKMOD_CURRENT=5
-LIBKMOD_REVISION=5
+LIBKMOD_REVISION=6
 LIBKMOD_AGE=3
 
 noinst_LTLIBRARIES = shared/libshared.la
@@ -90,7 +105,7 @@ libkmod_libkmod_la_DEPENDENCIES = \
 	${top_srcdir}/libkmod/libkmod.sym
 libkmod_libkmod_la_LIBADD = \
 	shared/libshared.la \
-	${liblzma_LIBS} ${zlib_LIBS} ${libcrypto_LIBS}
+	${libzstd_LIBS} ${liblzma_LIBS} ${zlib_LIBS} ${libcrypto_LIBS}
 
 noinst_LTLIBRARIES += libkmod/libkmod-internal.la
 libkmod_libkmod_internal_la_SOURCES = $(libkmod_libkmod_la_SOURCES)
@@ -411,7 +426,7 @@ DISTCLEAN_LOCAL_HOOKS += testsuite-distclean
 EXTRA_DIST += testsuite/rootfs-pristine
 
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-python --sysconfdir=/etc \
-	--with-zlib --with-openssl \
+	--with-zlib --with-zstd --with-openssl \
 	--with-bashcompletiondir=$$dc_install_base/$(bashcompletiondir)
 
 distclean-local: $(DISTCLEAN_LOCAL_HOOKS)
