@@ -528,20 +528,17 @@ int kmod_lookup_alias_from_kernel_builtin_file(struct kmod_ctx *ctx,
 						struct kmod_list **list)
 {
 	struct kmod_list *l;
-	int ret = kmod_lookup_alias_from_alias_bin(ctx,
-						KMOD_INDEX_MODULES_BUILTIN_ALIAS,
-						name, list);
-	if (ret > 0) {
-		kmod_list_foreach(l, *list) {
-			struct kmod_module *mod = l->data;
-			kmod_module_set_builtin(mod, true);
-		}
-	} else if (ret == -ENOSYS) {
-		/*
-		 * If the system does not support this yet, then
-		 * there is no need to return an error.
-		 */
-		ret = 0;
+	int ret;
+
+	assert(*list == NULL);
+
+	ret = kmod_lookup_alias_from_alias_bin(ctx,
+					       KMOD_INDEX_MODULES_BUILTIN_ALIAS,
+					       name, list);
+
+	kmod_list_foreach(l, *list) {
+		struct kmod_module *mod = l->data;
+		kmod_module_set_builtin(mod, true);
 	}
 
 	return ret;
@@ -858,6 +855,7 @@ KMOD_EXPORT int kmod_validate_resources(struct kmod_ctx *ctx)
  */
 KMOD_EXPORT int kmod_load_resources(struct kmod_ctx *ctx)
 {
+	int ret = 0;
 	size_t i;
 
 	if (ctx == NULL)
@@ -874,17 +872,25 @@ KMOD_EXPORT int kmod_load_resources(struct kmod_ctx *ctx)
 
 		snprintf(path, sizeof(path), "%s/%s.bin", ctx->dirname,
 							index_files[i].fn);
-		ctx->indexes[i] = index_mm_open(ctx, path,
-						&ctx->indexes_stamp[i]);
-		if (ctx->indexes[i] == NULL)
-			goto fail;
+		ret = index_mm_open(ctx, path, &ctx->indexes_stamp[i],
+				    &ctx->indexes[i]);
+
+		/*
+		 * modules.builtin.alias are considered optional since it's
+		 * recently added and older installations may not have it;
+		 * we allow failing for any reason
+		 */
+		if (ret) {
+			if (i != KMOD_INDEX_MODULES_BUILTIN_ALIAS)
+				break;
+			ret = 0;
+		}
 	}
 
-	return 0;
+	if (ret)
+		kmod_unload_resources(ctx);
 
-fail:
-	kmod_unload_resources(ctx);
-	return -ENOMEM;
+	return ret;
 }
 
 /**
